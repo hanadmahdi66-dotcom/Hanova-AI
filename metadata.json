@@ -1,0 +1,8 @@
+{
+  "name": "Hanova",
+  "description": "A modern and clean assistant app featuring flexible plans, Somalian payment methods integration (Zaad), an admin management panel, and Gemini AI integration. Powered by MHHS GAME INC.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
