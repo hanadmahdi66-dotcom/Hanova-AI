@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 🤖 hanova-AI
 
-# Run and deploy your AI Studio app
+**A Local Open Source AI Application powered by hanOS — Built with React.js.**
 
-This contains everything you need to run your app locally.
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-blue.svg)
+![Built with](https://img.shields.io/badge/Built%20with-React.js-61DAFB.svg)
+![Status](https://img.shields.io/badge/status-active-success.svg)
+![Contributions](https://img.shields.io/badge/PRs-welcome-orange.svg)
 
-View your app in AI Studio: https://ai.studio/apps/a8439a25-3bd4-46fb-bb47-cc6b0d6cfce1
+---
 
-## Run Locally
+## 📖 About
 
-**Prerequisites:**  Node.js
+**hanova-AI** waa Local Open Source AI Application oo ku dhisan **React.js**.
 
+Mashruucan waxaa loogu talagalay in uu dadka siiyo AI experience fudud, la habeyn karo, oo bulshada ay horumarin karto.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+hanova-AI wuxuu ku shaqeeyaa fikradda **hanOS**, oo ah deegaanka iyo ecosystem-ka ay ku dhisan yihiin AI applications-ka Hanath.
+
+---
+
+## 🛠️ Technology Stack
+
+### Frontend
+- ⚛️ React.js
+- 🎨 Modern UI Components
+- 🚀 Fast Development Environment
+
+### AI Layer
+- 🧠 AI Models Integration
+- 🔍 Intelligent Processing
+- 💾 Local-first architecture
+
+---
+
+## ✨ Features
+
+- 🤖 AI-powered application
+- ⚛️ Built with React.js
+- 🔓 Open Source
+- 🌍 Community-driven
+- ⚡ Fast and lightweight
+- 🛠️ Easy to customize
