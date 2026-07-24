@@ -1,44 +1,11 @@
-# 🤖 hanova-AI
-
-**A Local Open Source AI Application powered by hanOS — Built with React.js.**
-
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Open Source](https://img.shields.io/badge/Open%20Source-Yes-blue.svg)
-![Built with](https://img.shields.io/badge/Built%20with-React.js-61DAFB.svg)
-![Status](https://img.shields.io/badge/status-active-success.svg)
-![Contributions](https://img.shields.io/badge/PRs-welcome-orange.svg)
-
 ---
 
-## 📖 About
+## 🤝 Resource Partner
 
-**hanova-AI** waa Local Open Source AI Application oo ku dhisan **React.js**.
+hanova-AI supports collaboration with useful tools for the open-source community.
 
-Mashruucan waxaa loogu talagalay in uu dadka siiyo AI experience fudud, la habeyn karo, oo bulshada ay horumarin karto.
+**BizBot** – AI Business Lead Generation & Sales Automation Platform
 
-hanova-AI wuxuu ku shaqeeyaa fikradda **hanOS**, oo ah deegaanka iyo ecosystem-ka ay ku dhisan yihiin AI applications-ka Hanath.
+🌐 Website: http://bizbot.zvo.cn
 
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-- ⚛️ React.js
-- 🎨 Modern UI Components
-- 🚀 Fast Development Environment
-
-### AI Layer
-- 🧠 AI Models Integration
-- 🔍 Intelligent Processing
-- 💾 Local-first architecture
-
----
-
-## ✨ Features
-
-- 🤖 AI-powered application
-- ⚛️ Built with React.js
-- 🔓 Open Source
-- 🌍 Community-driven
-- ⚡ Fast and lightweight
-- 🛠️ Easy to customize
+We appreciate BizBot for providing a free license to open-source developers through their resource exchange program. Please review their terms and ensure compliance with all applicable laws, platform policies, and privacy requirements before use.
