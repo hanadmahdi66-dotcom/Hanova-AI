@@ -4,6 +4,7 @@ import {
   Trash2, Edit, Save, Database, TrendingUp
 } from 'lucide-react';
 import { User, PaymentRequest, AppStats } from '../types';
+import { API_BASE_URL, apiFetch } from '../config';
 
 interface AdminPanelProps {
   adminEmail: string;
@@ -35,19 +36,19 @@ export default function AdminPanel({ adminEmail, onLogout }: AdminPanelProps) {
     try {
       const emailParam = encodeURIComponent(adminEmail);
       
-      const statsRes = await fetch(`/api/admin/stats?adminEmail=${emailParam}`);
+      const statsRes = await apiFetch(`${API_BASE_URL}/api/admin/stats?adminEmail=${emailParam}`);
       const statsData = await statsRes.json();
       if (statsRes.ok) {
         setStats(statsData);
       }
 
-      const payRes = await fetch(`/api/admin/payments?adminEmail=${emailParam}`);
+      const payRes = await apiFetch(`${API_BASE_URL}/api/admin/payments?adminEmail=${emailParam}`);
       const payData = await payRes.json();
       if (payRes.ok) {
         setPayments(payData);
       }
 
-      const usersRes = await fetch(`/api/admin/users?adminEmail=${emailParam}`);
+      const usersRes = await apiFetch(`${API_BASE_URL}/api/admin/users?adminEmail=${emailParam}`);
       const usersData = await usersRes.json();
       if (usersRes.ok) {
         setUsers(usersData);
@@ -65,7 +66,7 @@ export default function AdminPanel({ adminEmail, onLogout }: AdminPanelProps) {
 
   const handleApprove = async (paymentId: string | null, userGmail: string) => {
     try {
-      const res = await fetch('/api/admin/approve', {
+      const res = await apiFetch(`${API_BASE_URL}/api/admin/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,7 +85,7 @@ export default function AdminPanel({ adminEmail, onLogout }: AdminPanelProps) {
 
   const handleReject = async (paymentId: string | null, userGmail: string) => {
     try {
-      const res = await fetch('/api/admin/reject', {
+      const res = await apiFetch(`${API_BASE_URL}/api/admin/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,7 +105,7 @@ export default function AdminPanel({ adminEmail, onLogout }: AdminPanelProps) {
   const handleDeleteUser = async (userGmail: string) => {
     if (!confirm(`Are you absolutely sure you want to permanently delete user account ${userGmail}? This action is irreversible.`)) return;
     try {
-      const res = await fetch('/api/admin/delete-user', {
+      const res = await apiFetch(`${API_BASE_URL}/api/admin/delete-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +130,7 @@ export default function AdminPanel({ adminEmail, onLogout }: AdminPanelProps) {
 
   const saveEditedUser = async (gmail: string) => {
     try {
-      const res = await fetch('/api/admin/edit-user', {
+      const res = await apiFetch(`${API_BASE_URL}/api/admin/edit-user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

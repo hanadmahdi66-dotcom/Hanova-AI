@@ -1,0 +1,17 @@
+{
+  "users": {
+    "hanadmahdi6@gmail.com": {
+      "gmail": "hanadmahdi6@gmail.com",
+      "name": "Ywjb",
+      "password": "password123",
+      "plan": "Free",
+      "price": 0,
+      "paymentStatus": "none",
+      "createdAt": "2026-05-23T14:59:19.149Z",
+      "dailyUploadsCount": 0,
+      "lastUploadDate": "2026-05-23"
+    }
+  },
+  "payments": [],
+  "history": []
+}

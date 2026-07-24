@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, Copy, Phone, ArrowLeft, Hourglass, ShieldCheck, Sparkles } from 'lucide-react';
 import { User, PlanDetails } from '../types';
+import { API_BASE_URL, apiFetch } from '../config';
 
 interface ChoosePlanProps {
   user: User;
@@ -79,7 +80,7 @@ export default function ChoosePlan({ user, onPlanActivated, onBackToAuth }: Choo
     if (plan.price === 0) {
       setChecking(true);
       try {
-        const res = await fetch('/api/user/select-plan', {
+        const res = await apiFetch(`${API_BASE_URL}/api/user/select-plan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -112,7 +113,7 @@ export default function ChoosePlan({ user, onPlanActivated, onBackToAuth }: Choo
     if (!selectedPlan) return;
     setChecking(true);
     try {
-      const res = await fetch('/api/user/select-plan', {
+      const res = await apiFetch(`${API_BASE_URL}/api/user/select-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +137,7 @@ export default function ChoosePlan({ user, onPlanActivated, onBackToAuth }: Choo
     let isMounted = true;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/user/status?gmail=${encodeURIComponent(user.gmail)}`);
+        const res = await apiFetch(`${API_BASE_URL}/api/user/status?gmail=${encodeURIComponent(user.gmail)}`);
         if (!res.ok) return;
         const data = await res.json();
         

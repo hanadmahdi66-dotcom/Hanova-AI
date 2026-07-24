@@ -5,6 +5,7 @@ import {
   Send, User as UserIcon, Shield, ArrowRight, Check, RefreshCw, X, AlertCircle
 } from 'lucide-react';
 import { User, AIHistoryItem } from '../types';
+import { API_BASE_URL, apiFetch } from '../config';
 
 interface HomeProps {
   user: User;
@@ -29,6 +30,17 @@ export default function Home({ user, isAdmin, onLogout, onUpgradePrompt }: HomeP
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [uploadsRemaining, setUploadsRemaining] = useState<number>(20);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+
+  // Auto-close liquid glass notification after 8 seconds
+  useEffect(() => {
+    if (showSuccessNotification) {
+      const timer = setTimeout(() => {
+        setShowSuccessNotification(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessNotification]);
 
   // Settings modals
   const [settingsSection, setSettingsSection] = useState<'profile' | 'privacy' | 'about'>('profile');
@@ -49,7 +61,7 @@ export default function Home({ user, isAdmin, onLogout, onUpgradePrompt }: HomeP
   // Fetch updated status to check limit remaining
   const fetchUserStatus = async () => {
     try {
-      const res = await fetch(`/api/user/status?gmail=${encodeURIComponent(user.gmail)}`);
+      const res = await apiFetch(`${API_BASE_URL}/api/user/status?gmail=${encodeURIComponent(user.gmail)}`);
       if (res.ok) {
         const data = await res.json();
         setUploadsRemaining(data.remaining);
@@ -63,7 +75,7 @@ export default function Home({ user, isAdmin, onLogout, onUpgradePrompt }: HomeP
   const fetchHistory = async () => {
     setHistoryLoading(true);
     try {
-      const res = await fetch(`/api/user/history?gmail=${encodeURIComponent(user.gmail)}`);
+      const res = await apiFetch(`${API_BASE_URL}/api/user/history?gmail=${encodeURIComponent(user.gmail)}`);
       if (res.ok) {
         const data = await res.json();
         setChatHistory(data);
@@ -235,19 +247,29 @@ export default function Home({ user, isAdmin, onLogout, onUpgradePrompt }: HomeP
         fileMimeType: file ? file.type : undefined
       };
 
-      const res = await fetch('/api/ai/ask', {
+      const res = await apiFetch(`${API_BASE_URL}/api/ai/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const responseText = await res.text();
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (e) {
+        if (!res.ok) {
+          throw new Error(`Server returned error status ${res.status}: ${responseText || 'Empty response'}`);
+        }
+        throw new Error('Received invalid response from server.');
+      }
 
       if (!res.ok) {
         throw new Error(data.error || 'Server error occurred.');
       }
 
       setAiAnswer(data.answer);
+      setShowSuccessNotification(true);
       if (isFree) {
         setUploadsRemaining(data.uploadsRemaining);
       }
@@ -961,6 +983,80 @@ export default function Home({ user, isAdmin, onLogout, onUpgradePrompt }: HomeP
           <span>Secure AI Processing Hub</span>
         </footer>
       </main>
+
+      {/* Liquid Glass Square Notification Toast */}
+      <AnimatePresence>
+        {showSuccessNotification && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 350 }}
+            id="hanova-ai-success-toast"
+            className="fixed bottom-6 right-6 z-50 w-[350px] max-w-[calc(100vw-3rem)] text-left"
+          >
+            {/* Shimming liquid accent bubbles right behind the frame */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 via-indigo-500/30 to-purple-600/30 blur-xl opacity-80 -z-10 animate-[pulse_3s_infinite]" />
+            
+            {/* Liquid Glass Pane: perfectly square (rounded-none), double-bordered, frosted translucency */}
+            <div className={`relative overflow-hidden border-2 rounded-none p-5 shadow-[0_20px_50px_rgba(30,41,59,0.25)] flex gap-3.5 ${
+              isDarkMode 
+                ? 'bg-slate-900/75 border-slate-700/60 text-white backdrop-blur-xl' 
+                : 'bg-white/70 border-white/60 text-slate-900 backdrop-blur-xl'
+            }`}>
+              
+              {/* Dynamic glossy glass highlight line crossing the top */}
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-blue-500/80 to-transparent opacity-80" />
+
+              {/* Status Neon Indicator Strip */}
+              <div className="w-1.5 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-600 self-stretch shrink-0" />
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Sparkles className="h-4 w-4 text-blue-500 shrink-0 animate-pulse" />
+                  <span className="text-[10px] font-mono font-black uppercase tracking-[0.25em] text-blue-650 dark:text-blue-400">
+                    HANOVA AI HELPER
+                  </span>
+                </div>
+                
+                <h4 className="text-xs font-black uppercase tracking-wider leading-snug">
+                  Jawaabtii Waa Diyaar! 🎉
+                </h4>
+                
+                <p className={`text-[11px] font-medium leading-relaxed mt-2 ${
+                  isDarkMode ? 'text-slate-300' : 'text-slate-600'
+                }`}>
+                  Falanqaynta casharkaaga si toos ah ayaa loo diyaariyay. Fadlan ka eeg sanduuqa jawaabaha!
+                </p>
+
+                {/* Animated progress indicator - matches 8000ms custom auto-close */}
+                <div className="mt-4 bg-slate-200/30 dark:bg-slate-800/40 h-1.5 w-full overflow-hidden border border-transparent">
+                  <motion.div 
+                    initial={{ width: "100%" }}
+                    animate={{ width: "0%" }}
+                    transition={{ duration: 8, ease: "linear" }}
+                    className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"
+                  />
+                </div>
+              </div>
+
+              {/* Close controls with crisp square outline */}
+              <button
+                type="button"
+                onClick={() => setShowSuccessNotification(false)}
+                className={`p-1.5 self-start transition-all cursor-pointer rounded-none border border-transparent ${
+                  isDarkMode 
+                    ? 'text-slate-400 hover:text-white hover:bg-white/10 hover:border-slate-800' 
+                    : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100/80 hover:border-slate-200'
+                }`}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

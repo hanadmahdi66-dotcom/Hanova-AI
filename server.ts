@@ -25,20 +25,30 @@ interface LocalDB {
 
 // Ensure the JSON DB file exists and load it
 function loadDB(): LocalDB {
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      const data = fs.readFileSync(DB_PATH, 'utf-8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error loading database:', error);
-  }
-  // Default Database
   const defaultDB: LocalDB = {
     users: {},
     payments: [],
     history: []
   };
+
+  try {
+    if (fs.existsSync(DB_PATH)) {
+      const data = fs.readFileSync(DB_PATH, 'utf-8').trim();
+      if (!data) {
+        saveDB(defaultDB);
+        return defaultDB;
+      }
+      const parsed = JSON.parse(data);
+      return {
+        users: parsed?.users || {},
+        payments: parsed?.payments || [],
+        history: parsed?.history || []
+      };
+    }
+  } catch (error) {
+    console.error('Error loading database:', error);
+  }
+  // Default Database
   saveDB(defaultDB);
   return defaultDB;
 }
@@ -71,6 +81,39 @@ function getGeminiAI() {
   return geminiAI;
 }
 
+// Helper function to call Gemini with retries and fallback models
+async function callGeminiWithFallback(ai: any, contents: any, config?: any) {
+  // Ordered model priority list based on @google/genai guidelines
+  const modelsToTry = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.1-pro-preview'];
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const payload: any = { model, contents };
+        if (config) {
+          payload.config = config;
+        }
+        const response = await ai.models.generateContent(payload);
+        if (response && response.text) {
+          return response;
+        }
+      } catch (err: any) {
+        lastError = err;
+        const errMsg = String(err?.message || err);
+        console.warn(`[Gemini API] Model '${model}' attempt ${attempt} failed: ${errMsg}`);
+        const isTransient = errMsg.includes('503') || errMsg.includes('UNAVAILABLE') || errMsg.includes('429') || errMsg.includes('high demand') || errMsg.includes('overloaded');
+        if (!isTransient && attempt === 1) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 600 * attempt));
+      }
+    }
+  }
+
+  throw lastError || new Error('The AI model is currently experiencing high demand. Please try again in a few moments.');
+}
+
 // Helper to reset and check daily limit for Free Plan
 function checkAndResetDailyLimit(user: User): { updatedUser: User; allowed: boolean; remaining: number } {
   const today = new Date().toISOString().split('T')[0];
@@ -98,112 +141,117 @@ function checkAndResetDailyLimit(user: User): { updatedUser: User; allowed: bool
 
 // Authentication / Registration endpoint
 app.post('/api/auth/login', (req, res) => {
-  const { gmail, name, password, action } = req.body;
-  
-  if (!gmail) {
-    res.status(400).json({ error: 'Gmail is required.' });
-    return;
-  }
+  try {
+    const { gmail, name, password, action } = req.body;
+    
+    if (!gmail) {
+      res.status(400).json({ error: 'Gmail is required.' });
+      return;
+    }
 
-  const cleanEmail = gmail.toLowerCase().trim();
+    const cleanEmail = gmail.toLowerCase().trim();
 
-  // Admin bypass
-  if (cleanEmail === 'hanadmahdi66@gmail.com') {
-    if (password === 'h1a1n1a1d1H@') {
-      res.json({
-        success: true,
-        gmail: cleanEmail,
-        name: name || 'Admin Hanad',
-        isAdmin: true,
-        user: {
+    // Admin bypass
+    if (cleanEmail === 'hanadmahdi66@gmail.com') {
+      if (password === 'h1a1n1a1d1H@') {
+        res.json({
+          success: true,
           gmail: cleanEmail,
           name: name || 'Admin Hanad',
-          plan: 'Premium' as UserPlan,
-          price: 2.0,
-          paymentStatus: 'approved',
-          createdAt: new Date().toISOString(),
-          dailyUploadsCount: 0
-        }
-      });
-      return;
-    } else {
-      res.status(401).json({ error: 'Incorrect password for Admin Workspace.' });
-      return;
+          isAdmin: true,
+          user: {
+            gmail: cleanEmail,
+            name: name || 'Admin Hanad',
+            plan: 'Premium' as UserPlan,
+            price: 2.0,
+            paymentStatus: 'approved',
+            createdAt: new Date().toISOString(),
+            dailyUploadsCount: 0
+          }
+        });
+        return;
+      } else {
+        res.status(401).json({ error: 'Incorrect password for Admin Workspace.' });
+        return;
+      }
     }
-  }
 
-  // Load database
-  const db = loadDB();
-  let user = db.users[cleanEmail];
+    // Load database
+    const db = loadDB();
+    let user = db.users[cleanEmail];
 
-  const clientAction = action || (name ? 'signup' : 'login');
+    const clientAction = action || (name ? 'signup' : 'login');
 
-  if (clientAction === 'signup') {
-    if (user) {
-      res.status(400).json({ error: 'An account with this Gmail address already exists. Please log in instead!' });
-      return;
-    }
-    if (!password) {
-      res.status(400).json({ error: 'Password is required to register.' });
-      return;
-    }
-    
-    // Validate strong password logic
-    if (password.length < 8) {
-      res.status(400).json({ error: 'Ereyga sirta ah waa inuu ka koobnaadaa ugu yaraan 8 xaraf! (Password must be at least 8 characters)' });
-      return;
-    }
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    if (!hasLetter || !hasNumber) {
-      res.status(400).json({ error: 'Ereyga sirta ah waa inuu wataa xarfo iyo tiro isku jira (sida 12345678H). Password must contain both letters and digits!' });
-      return;
-    }
-    
-    // Register user with a password
-    user = {
-      gmail: cleanEmail,
-      name: name || cleanEmail.split('@')[0],
-      password: password,
-      plan: 'Free',
-      price: 0,
-      paymentStatus: 'none',
-      createdAt: new Date().toISOString(),
-      dailyUploadsCount: 0,
-      lastUploadDate: new Date().toISOString().split('T')[0]
-    };
-    db.users[cleanEmail] = user;
-    saveDB(db);
-  } else {
-    // Login
-    if (!user) {
-      res.status(404).json({ error: 'No account found with this Gmail. Please sign up to create an account first!' });
-      return;
-    }
-    if (!password) {
-      res.status(400).json({ error: 'Password is required to log in.' });
-      return;
-    }
-    // Check password configuration
-    if (user.password && user.password !== password) {
-      res.status(401).json({ error: 'Incorrect password. Please verify and try again.' });
-      return;
-    }
-    // Backward compatibility: If an old user exists without a password, assign their typed password as their secure password
-    if (!user.password) {
-      user.password = password;
+    if (clientAction === 'signup') {
+      if (user) {
+        res.status(400).json({ error: 'An account with this Gmail address already exists. Please log in instead!' });
+        return;
+      }
+      if (!password) {
+        res.status(400).json({ error: 'Password is required to register.' });
+        return;
+      }
+      
+      // Validate strong password logic
+      if (password.length < 8) {
+        res.status(400).json({ error: 'Ereyga sirta ah waa inuu ka koobnaadaa ugu yaraan 8 xaraf! (Password must be at least 8 characters)' });
+        return;
+      }
+      const hasLetter = /[a-zA-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      if (!hasLetter || !hasNumber) {
+        res.status(400).json({ error: 'Ereyga sirta ah waa inuu wataa xarfo iyo tiro isku jira (sida 12345678H). Password must contain both letters and digits!' });
+        return;
+      }
+      
+      // Register user with a password
+      user = {
+        gmail: cleanEmail,
+        name: name || cleanEmail.split('@')[0],
+        password: password,
+        plan: 'Free',
+        price: 0,
+        paymentStatus: 'none',
+        createdAt: new Date().toISOString(),
+        dailyUploadsCount: 0,
+        lastUploadDate: new Date().toISOString().split('T')[0]
+      };
       db.users[cleanEmail] = user;
       saveDB(db);
+    } else {
+      // Login
+      if (!user) {
+        res.status(404).json({ error: 'No account found with this Gmail. Please sign up to create an account first!' });
+        return;
+      }
+      if (!password) {
+        res.status(400).json({ error: 'Password is required to log in.' });
+        return;
+      }
+      // Check password configuration
+      if (user.password && user.password !== password) {
+        res.status(401).json({ error: 'Incorrect password. Please verify and try again.' });
+        return;
+      }
+      // Backward compatibility: If an old user exists without a password, assign their typed password as their secure password
+      if (!user.password) {
+         user.password = password;
+         db.users[cleanEmail] = user;
+         saveDB(db);
+      }
     }
-  }
 
-  res.json({
-    success: true,
-    gmail: cleanEmail,
-    name: user.name,
-    isAdmin: false,
-    user
-  });
+    res.json({
+      success: true,
+      gmail: cleanEmail,
+      name: user.name,
+      isAdmin: false,
+      user
+    });
+  } catch (err: any) {
+    console.error('Login router error:', err);
+    res.status(500).json({ error: err?.message || 'Internal authentication server error.' });
+  }
 });
 
 // Update or Select Plan endpoint
@@ -353,10 +401,7 @@ app.post('/api/ai/ask', async (req, res) => {
       const customPrompt = `${systemInstruction}\n\nPlease analyze this student's uploaded image and address the following query: ${promptText || 'Analyze the content and provide an itemized explain list.'}`;
       const textPart = { text: customPrompt };
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: { parts: [imagePart, textPart] }
-      });
+      const response = await callGeminiWithFallback(ai, { parts: [imagePart, textPart] });
       geminiResponseText = response.text || 'No explanation generated.';
 
     } else if (type === 'text_file' && fileData) {
@@ -364,10 +409,7 @@ app.post('/api/ai/ask', async (req, res) => {
       const fileContentText = Buffer.from(fileData, 'base64').toString('utf-8');
       const textPrompt = `${systemInstruction}\n\nAnalyze and study the uploaded document text thoroughly:\n\n"""\n${fileContentText}\n"""\n\nStudent's instruction/context query: ${promptText || 'Explain and summarize key aspects of this document.'}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: textPrompt
-      });
+      const response = await callGeminiWithFallback(ai, textPrompt);
       geminiResponseText = response.text || 'No response generated.';
 
     } else {
@@ -379,10 +421,7 @@ app.post('/api/ai/ask', async (req, res) => {
 
       const textPrompt = `${systemInstruction}\n\nStudent's Query / Help Request: ${promptText}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: textPrompt
-      });
+      const response = await callGeminiWithFallback(ai, textPrompt);
       geminiResponseText = response.text || 'No response generated.';
     }
 
@@ -415,7 +454,16 @@ app.post('/api/ai/ask', async (req, res) => {
 
   } catch (error: any) {
     console.error('Gemini error:', error);
-    res.status(500).json({ error: error.message || 'An error occurred during Gemini AI processing.' });
+    const rawMsg = String(error?.message || error || '');
+    let userFriendlyError = 'An error occurred during Gemini AI processing.';
+    if (rawMsg.includes('503') || rawMsg.includes('UNAVAILABLE') || rawMsg.includes('high demand') || rawMsg.includes('overloaded')) {
+      userFriendlyError = 'The AI model is experiencing temporary high demand. Please wait a few seconds and try again!';
+    } else if (rawMsg.includes('GEMINI_API_KEY')) {
+      userFriendlyError = 'Please configure your GEMINI_API_KEY in the Secrets panel.';
+    } else if (rawMsg) {
+      userFriendlyError = rawMsg;
+    }
+    res.status(500).json({ error: userFriendlyError });
   }
 });
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, User as UserIcon, Lock, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
+import { API_BASE_URL, apiFetch } from '../config';
 
 interface RegistrationProps {
   onAuthSuccess: (user: any, isAdmin: boolean) => void;
@@ -64,7 +65,7 @@ export default function Registration({ onAuthSuccess }: RegistrationProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await apiFetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +78,17 @@ export default function Registration({ onAuthSuccess }: RegistrationProps) {
         }),
       });
 
-      const data = await response.json();
+      let data: any = {};
+      const responseText = await response.text();
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (e) {
+        console.error('Failed to parse JSON response. Status:', response.status, 'Text:', responseText);
+        if (!response.ok) {
+          throw new Error(`Server returned error ${response.status}: ${responseText || 'Empty response'}`);
+        }
+        throw new Error(`Invalid response format from server (Status: ${response.status}).`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed. Please verify credentials.');
