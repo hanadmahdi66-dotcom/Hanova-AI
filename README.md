@@ -25,53 +25,13 @@ https://hanova-ai.vercel.app/
 
 <br>
 
-🤝 <b>Resource Partner:</b>  
+ <b>Resource Partner:</b>  
 BizBot  
 http://bizbot.zvo.cn
-
-<p> 
-  Hanova-AI collaborates with technology resources that support open-source developers and software innovation.
-
-BizBot
-
-BizBot is an AI Business Lead Generation and Sales Automation platform.
-
-Official Website:
-
-http://bizbot.zvo.cn
-
-BizBot provides resources for open-source developers through its resource exchange program.
-
-We appreciate BizBot for supporting collaboration and developer communities.
-
-🔒 Privacy & Security
-
-Hanova-AI respects user privacy and promotes responsible technology development.
-
-The project follows principles including:
-
-Privacy protection
-Transparency
-Responsible AI usage
-Secure software development
-
-Users should respect:
-
-Applicable laws
-Platform rules
-Third-party service policies
-🌍 Open Source Community
-
-Hanova-AI welcomes developers, creators, and contributors.
-
-You can help by:
-
-Reporting bugs
-Suggesting improvements
-Improving documentation
-Creating contributions
-</p>
-
+<p>
+ Community Resource:
+BizBot — External AI business tool.
+This resource is provided for users who may find it useful. It is not affiliated with Hanova-AI or HanOS. 
 </p>
 
 
