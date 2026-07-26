@@ -23,16 +23,7 @@
 🌐 <b>Offical site hanOva AI:</b>  
 https://hanova-ai.vercel.app/
 
-<br>
 
- <b>Resource Partner:</b>  
-BizBot  
-http://bizbot.zvo.cn
-<p>
- Community Resource:
-BizBot — External AI business tool.
-This resource is provided for users who may find it useful. It is not affiliated with Hanova-AI or HanOS. 
-</p>
 
 
 
